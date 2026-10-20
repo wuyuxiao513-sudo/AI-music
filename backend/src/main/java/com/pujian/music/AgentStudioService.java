@@ -25,7 +25,13 @@ public class AgentStudioService {
     public boolean isReady() {
         if (settings != null) {
             var config = settings.current();
-            String host = java.net.URI.create(config.textBaseUrl()).getHost();
+            String host;
+            try {
+                host = java.net.URI.create(config.textBaseUrl()).getHost();
+            } catch (Exception ignored) {
+                // 用户手填的 Base URL 非法时，不应让 /api/status 直接 500。
+                return false;
+            }
             return !config.textModel().isBlank() && (!config.textApiKey().isBlank()
                 || "localhost".equals(host) || "127.0.0.1".equals(host));
         }

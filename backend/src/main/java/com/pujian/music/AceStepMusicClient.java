@@ -95,7 +95,9 @@ public class AceStepMusicClient {
             .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(payload))).build(), HttpResponse.BodyHandlers.ofString());
         checkHttp(response.statusCode());
         var body = mapper.readTree(response.body());
-        if (body == null || body.path("code").asInt(200) != 200 || !body.path("error").isMissingNode() && !body.path("error").isNull())
+        if (body == null
+            || body.path("code").asInt(200) != 200
+            || (!body.path("error").isMissingNode() && !body.path("error").isNull()))
             throw failure("ACE-Step 请求失败，请查看本地服务日志");
         return body.path("data");
     }

@@ -84,9 +84,16 @@ public class AudioService {
     private Song generateInternal(String id, Integer durationSeconds) {
         var song = songs.find(id);
         String configuredEndpoint = settings == null ? endpoint : settings.current().musicEndpoint();
-        if (configuredEndpoint != null && !configuredEndpoint.isBlank()
-            && "api.deepseek.com".equalsIgnoreCase(URI.create(configuredEndpoint).getHost()))
-            throw new ApiException(HttpStatus.BAD_REQUEST, "DeepSeek 请配置在歌词模型中。歌曲音频需要单独接入音乐生成服务。");
+        if (configuredEndpoint != null && !configuredEndpoint.isBlank()) {
+            String host = null;
+            try {
+                host = URI.create(configuredEndpoint).getHost();
+            } catch (Exception ignored) {
+                // 非法 URL 由后续请求阶段暴露，这里不要直接抛 500。
+            }
+            if ("api.deepseek.com".equalsIgnoreCase(host))
+                throw new ApiException(HttpStatus.BAD_REQUEST, "DeepSeek 请配置在歌词模型中。歌曲音频需要单独接入音乐生成服务。");
+        }
         if (song.lyrics().isBlank()) throw new ApiException(HttpStatus.BAD_REQUEST, "请先写好歌词");
         if (!isReady()) throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
             "请在 AI 模型配置中选择音乐服务并保存；ElevenLabs 需要 API Key，ACE-Step 需要启动本地服务。");
